@@ -2,8 +2,9 @@
 
 ### BEGIN INIT INFO
 # /etc/init.d/mycs
-# Description:       My Service for Cubie
-# Description:       http://mycubieserv.blogspot.com/
+# Description:		My Service for Cubie
+# 			http://mycubieserv.blogspot.com/
+#			https://github.com/mycubieserv/Service-Scripte
 ### END INIT INFO
 
 . /lib/lsb/init-functions
@@ -21,7 +22,7 @@ USER_PASS=root:****
 
 # Carry out specific functions when asked to by the system
 case "$1" in
-        install-all)
+        up-inst-all)
                 log_action_msg "Sources list update..."
 			echo "deb http://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list
 
@@ -58,7 +59,7 @@ case "$1" in
                 ;;
         backup)
                 log_action_msg "Prepare backup files..."
-			crontab -u $USER_PASS -l > $CRONTAB_FILE
+			# crontab -u $USER_PASS -l > $CRONTAB_FILE
 			rm -f $BACKUP_FILELIST
 			rm -rf /tmp/*
 
@@ -88,7 +89,7 @@ case "$1" in
 			service mpd stop
 
 			tar -zxvpf $FILE_BACKUP --directory /
-			crontab -u $USER_PASS $CRONTAB_FILE
+			# crontab -u $USER_PASS $CRONTAB_FILE
 
 			/etc/init.d/transmission-daemon start
 			service mpd start
@@ -109,18 +110,17 @@ case "$1" in
                 log_action_msg "   >>> Archive listing:"
 			echo tar -tvf $FILE_BACKUP
 
-		sleep 3
-                log_action_msg "   >>> Cron:"
-			echo crontab -u $USER_PASS -l 
+		# sleep 3
+                # log_action_msg "   >>> Cron:"
+		# 	echo crontab -u $USER_PASS -l 
                 ;;
         apt-clear)
                 log_action_msg "Starting APT-clear..."
 			dpkg --clear-avail
+			apt-get clean -y -f --force-yes
 
 			rm /var/lib/dpkg/available -vrf
 			rm /var/lib/dpkg/status -vrf
-
-			apt-get clean -y -f --force-yes
 
 			rm /var/lib/apt/lists/partial/* -vrf 
 			rm /var/lib/apt/lists/* -vrf 
@@ -149,7 +149,7 @@ case "$1" in
 			shutdown -h now
                 ;;
         *)
-                log_action_msg "Usage: $0 {install-all|tune-all|backup|restore|bck-status|apt-clear|full-upgrade|shutdown}"
+                log_action_msg "Usage: $0 {up-inst-all|tune-all|backup|restore|bck-status|apt-clear|full-upgrade|shutdown}"
                 exit 1
                 ;;
 esac
