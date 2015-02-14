@@ -12,9 +12,10 @@
 
 NAME="My Cubie Service"
 DESC="My Cubie Service"
-FILE_BACKUP=/home/user/sata/_backup_/backup.tar.gz
-BACKUP_FILELIST=/home/user/sata/_backup_/backupfiles.lst
-CRONTAB_FILE=/home/user/sata/_backup_/crontab.txt
+VERSION="0.0.0.1"
+FILE_BACKUP="/home/user/sata/_backup_/backup.tar.gz"
+BACKUP_FILELIST="/home/user/sata/_backup_/backupfiles.lst"
+CRONTAB_FILE="/home/user/sata/_backup_/crontab.txt"
 STATUS_CMD="/etc/init.d/mybackup bck-status"
 FULL_UPGRADE_CMD="/etc/init.d/mybackup full-upgrade"
 USER_PASS=root:****
@@ -36,7 +37,7 @@ case "$1" in
 			pip install --upgrade setuptools 
 			pip install d2pi
 
-                log_action_msg "Install packages comlete!"
+                log_action_msg "Install packages complete!"
                 ;;
         tune-all)
                 log_action_msg "Starting Tune..."
@@ -54,49 +55,41 @@ case "$1" in
 
 			ln -sf /lib/ld-linux-armhf.so.3 /lib/ld-linux.so.3
 
-                log_action_msg "Tune comlete!"
+                log_action_msg "Tune complete!"
 		$STATUS_CMD
                 ;;
         backup)
-                log_action_msg "Prepare backup files..."
-			# crontab -u $USER_PASS -l > $CRONTAB_FILE
-			rm -f $BACKUP_FILELIST
-			rm -rf /tmp/*
-
-			ls /var/lib/transmission-daemon/info/torrents/ > /tmp/bck_torrents
-			ls /var/lib/transmission-daemon/info/resume/ > /tmp/bck_resume
-			ls /var/lib/transmission-daemon/info/blocklists/ > /tmp/bck_blocklists
-			ls /var/lib/mpd/ > /tmp/bck_mpd
-			ls /var/lib/mpd/playlists/ > /tmp/bck_playlists 
-			ls \home\cubie\Desktop\ > /tmp/bck_desktop_cubie
-			ls \home\cubie\.mozilla\ > /tmp/bck_mozilla_cubie
-			ls \root\.mozilla\ > /tmp/bck_mozilla_root	
-			ls \root\Desktop\ > /tmp/bck_desktop_root
-
-			touch $BACKUP_FILELIST
-			cat /tmp/bck_torrents /tmp/bck_resume /tmp/bck_blocklists /tmp/bck_mpd /tmp/bck_playlists /tmp/bck_mozilla_cubie /tmp/bck_desktop_cubie /tmp/bck_mozilla_root /tmp/bck_desktop_root > $BACKUP_FILELIST &
-			rm -rf /tmp/*
+                log_action_msg "Stopping services..."
+			/etc/init.d/transmission-daemon stop
+			service mpd stop
 
                 log_action_msg "Starting backup files..."
 			tar -zcvpf $FILE_BACKUP --directory / --files-from $BACKUP_FILELIST 
 
-                log_action_msg "Backup files comlete!"
-		$STATUS_CMD
-                ;;
-        restore)
-                log_action_msg "Starting restore files..."
-			/etc/init.d/transmission-daemon stop
-			service mpd stop
-
-			tar -zxvpf $FILE_BACKUP --directory /
-			# crontab -u $USER_PASS $CRONTAB_FILE
-
+                log_action_msg "Starting services..."
 			/etc/init.d/transmission-daemon start
 			service mpd start
 
-                log_action_msg "Restore files comlete!"
+                log_action_msg "Backup files complete!"
 		$STATUS_CMD
                 ;;
+        restore)
+                log_action_msg "Stopping services..."
+			/etc/init.d/transmission-daemon stop
+			service mpd stop
+
+                log_action_msg "Starting restore files..."
+			tar -zxvpf $FILE_BACKUP --directory /
+			# crontab $CRONTAB_FILE
+                log_action_msg "Restore files complete!"
+
+                log_action_msg "Starting services..."
+			/etc/init.d/transmission-daemon start
+			service mpd start
+
+		$STATUS_CMD
+                ;;
+
         bck-status)
                 log_action_msg "Status:"
                 log_action_msg "   >>> File Systems:"
@@ -132,7 +125,7 @@ case "$1" in
 
 			dpkg --configure -a
 
-                log_action_msg "APT-clear comlete!"
+                log_action_msg "APT-clear complete!"
 			$FULL_UPGRADE_CMD
                 ;;
         full-upgrade)
@@ -142,13 +135,14 @@ case "$1" in
 			apt-get dist-upgrade -y -f --force-yes 
 			apt-get update -y --force-yes
 
-                log_action_msg "Upgrade packages comlete!"
+                log_action_msg "Upgrade packages complete!"
                 ;;
         shutdown)
                 log_action_msg "Shutdown system now..."
 			shutdown -h now
                 ;;
         *)
+                log_action_msg "mycs v.$VERSION"
                 log_action_msg "Usage: $0 {up-inst-all|tune-all|backup|restore|bck-status|apt-clear|full-upgrade|shutdown}"
                 exit 1
                 ;;
